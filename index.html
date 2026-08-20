@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive wheel-terrain terramechanics simulator" />
+  <title>Wheel–Terrain Sim</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">WHEEL–TERRAIN SIM</p>
+      <h1>タイヤと地面の力を、動きで見る。</h1>
+      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップをタイヤ形状ごとに比較します。</p>
+    </div>
+    <div class="hero-actions">
+      <button id="playBtn" class="primary">▶ 再生</button>
+      <button id="recordBtn">● 8秒動画を保存</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid two">
+      <article class="panel sim-panel">
+        <div class="panel-head">
+          <div>
+            <h2>走行アニメーション</h2>
+            <p>接触域の反力とタイヤの沈み込みを可視化</p>
+          </div>
+          <span id="modelBadge" class="badge">Bekker–Wong + Janosi–Hanamoto</span>
+        </div>
+        <canvas id="simCanvas" width="960" height="520"></canvas>
+        <div class="legend">
+          <span><i class="dot normal"></i>法線反力</span>
+          <span><i class="dot shear"></i>せん断力</span>
+          <span><i class="dot resultant"></i>合力</span>
+        </div>
+      </article>
+
+      <aside class="panel controls">
+        <div class="panel-head">
+          <div>
+            <h2>条件</h2>
+            <p>変更すると即座に再計算</p>
+          </div>
+        </div>
+
+        <label>タイヤ
+          <select id="wheelSelect"></select>
+        </label>
+        <label>地盤
+          <select id="soilSelect"></select>
+        </label>
+
+        <label>荷重 <output id="loadOut"></output>
+          <input id="loadInput" type="range" min="50" max="600" step="10" value="200" />
+        </label>
+        <label>スリップ率 <output id="slipOut"></output>
+          <input id="slipInput" type="range" min="0" max="0.8" step="0.01" value="0.20" />
+        </label>
+        <label>走行速度 <output id="speedOut"></output>
+          <input id="speedInput" type="range" min="0.05" max="2" step="0.05" value="0.60" />
+        </label>
+
+        <details>
+          <summary>選択タイヤの形状パラメータ</summary>
+          <div id="wheelDetails" class="details-grid"></div>
+        </details>
+        <details>
+          <summary>地盤モデルのパラメータ</summary>
+          <div id="soilDetails" class="details-grid"></div>
+        </details>
+      </aside>
+    </section>
+
+    <section class="metric-grid" id="metricGrid"></section>
+
+    <section class="grid two">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>タイヤ比較</h2>
+            <p>同じ荷重・地盤・スリップ率で比較</p>
+          </div>
+        </div>
+        <div id="comparisonTable" class="table-wrap"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>スリップ率スイープ</h2>
+            <p>推進力と効率の変化</p>
+          </div>
+        </div>
+        <canvas id="chartCanvas" width="900" height="460"></canvas>
+      </article>
+    </section>
+
+    <section class="panel notes">
+      <h2>この解析の位置づけ</h2>
+      <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
+      <p class="warning">絶対値を実機設計に使うには地盤パラメータの実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>wheel-terrain-sim</span>
+    <span>Interactive terramechanics sandbox</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
