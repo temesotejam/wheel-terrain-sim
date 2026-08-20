@@ -34,6 +34,10 @@ jobs:
         run: node --check soil-editor.js
       - name: Check editor sync syntax
         run: node --check editor-sync.js
+      - name: Check RFT model syntax
+        run: node --check rft-model.js
+      - name: Check RFT comparison syntax
+        run: node --check rft-compare.js
       - name: Run repass model tests
         run: node tests/repass-model.test.js
       - name: Run wheel geometry model tests
@@ -44,3 +48,7 @@ jobs:
         run: node tests/soil-model.test.js
       - name: Run soil editor UI wiring tests
         run: node tests/soil-editor-ui.test.js
+      - name: Run RFT model tests
+        run: node tests/rft-model.test.js
+      - name: Run RFT UI wiring tests
+        run: node tests/rft-ui.test.js
