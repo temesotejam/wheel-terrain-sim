@@ -20,45 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check main simulator syntax
-        run: node --check app.js
-      - name: Check repass module syntax
-        run: node --check repass.js
-      - name: Check wheel geometry model syntax
-        run: node --check wheel-geometry.js
-      - name: Check wheel editor syntax
-        run: node --check wheel-editor.js
-      - name: Check soil model syntax
-        run: node --check soil-model.js
-      - name: Check soil editor syntax
-        run: node --check soil-editor.js
-      - name: Check editor sync syntax
-        run: node --check editor-sync.js
-      - name: Check RFT alpha map syntax
-        run: node --check rft-alpha-map.js
-      - name: Check RFT alpha editor syntax
-        run: node --check rft-alpha-editor.js
-      - name: Check RFT model syntax
-        run: node --check rft-model.js
-      - name: Check RFT comparison syntax
-        run: node --check rft-compare.js
-      - name: Run repass model tests
-        run: node tests/repass-model.test.js
-      - name: Run wheel geometry model tests
-        run: node tests/wheel-geometry.test.js
-      - name: Run wheel editor UI wiring tests
-        run: node tests/wheel-editor-ui.test.js
-      - name: Run soil model tests
-        run: node tests/soil-model.test.js
-      - name: Run soil editor UI wiring tests
-        run: node tests/soil-editor-ui.test.js
-      - name: Run RFT model tests
-        run: node tests/rft-model.test.js
-      - name: Run RFT UI wiring tests
-        run: node tests/rft-ui.test.js
-      - name: Run RFT alpha map tests
-        run: node tests/rft-alpha-map.test.js
-      - name: Run RFT alpha integration tests
-        run: node tests/rft-alpha-integration.test.js
-      - name: Run RFT alpha editor UI tests
-        run: node tests/rft-alpha-ui.test.js
+          cache: npm
+      - name: Run v1 test suite
+        run: npm test
