@@ -9,13 +9,14 @@
   <link rel="stylesheet" href="repass.css" />
   <link rel="stylesheet" href="wheel-editor.css" />
   <link rel="stylesheet" href="soil-editor.css" />
+  <link rel="stylesheet" href="rft-compare.css" />
 </head>
 <body>
   <header class="hero">
     <div>
       <p class="eyebrow">WHEEL–TERRAIN SIM</p>
       <h1>タイヤと地面の力を、動きで見る。</h1>
-      <p class="lead">簡易テラメカニクスモデルで、タイヤ形状と地盤特性を自由に変えながら、沈下・推進力・必要トルク・スリップ・轍・再踏破を比較できます。</p>
+      <p class="lead">タイヤ形状と地盤特性を自由に変えながら、Bekker–Wong系モデルとRFT proxyを比較し、沈下・推進力・トルク・スリップ・轍・再踏破まで可視化します。</p>
     </div>
     <div class="hero-actions">
       <button id="playBtn" class="primary">▶ 再生</button>
@@ -206,6 +207,51 @@
       </aside>
     </section>
 
+    <section class="grid two rft-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>RFT 局所抵抗の可視化</h2>
+            <p>接触面を小要素に分け、深さ・面の向き・運動方向から局所抵抗を積分</p>
+          </div>
+          <span class="badge">RFT proxy / uncalibrated α map</span>
+        </div>
+        <canvas id="rftVizCanvas" width="960" height="460"></canvas>
+      </article>
+
+      <aside class="panel rft-controls">
+        <div class="panel-head">
+          <div>
+            <h2>Bekker–Wong vs RFT</h2>
+            <p>同じタイヤ・地盤・荷重・スリップ率で比較</p>
+          </div>
+        </div>
+
+        <label>RFT 校正ゲイン <output id="rftCalibrationOut">1.00 ×</output>
+          <input id="rftCalibrationInput" type="range" min="0.25" max="4.00" step="0.05" value="1.00" />
+        </label>
+        <div class="rft-actions">
+          <button id="rftCalibrateBtn" class="primary">沈下量で仮校正</button>
+          <button id="rftResetCalibrationBtn">1.00×へ戻す</button>
+        </div>
+
+        <div id="rftSummary" class="rft-summary"></div>
+        <div id="rftCurrentTable" class="rft-current-table"></div>
+        <p id="rftWarning" class="rft-warning"></p>
+      </aside>
+    </section>
+
+    <section class="panel rft-chart-panel">
+      <div class="panel-head">
+        <div>
+          <h2>モデル差のスリップ率スイープ</h2>
+          <p>同じ条件で Bekker–Wong と RFT proxy の推進力・沈下量を比較</p>
+        </div>
+      </div>
+      <canvas id="rftCompareCanvas" width="1400" height="570"></canvas>
+      <p class="rft-chart-note">RFT本来の αx(β,γ), αz(β,γ) はプレート侵入試験などから地盤ごとに同定します。現在はカスタム地盤の pressure–sinkage 特性から応力/深さスケールを作った未校正proxyで、モデル傾向を比べるための表示です。</p>
+    </section>
+
     <section class="grid two">
       <article class="panel">
         <div class="panel-head">
@@ -221,7 +267,7 @@
         <div class="panel-head">
           <div>
             <h2>スリップ率スイープ</h2>
-            <p>推進力と効率の変化</p>
+            <p>Bekker–Wong系モデルでの推進力と効率の変化</p>
           </div>
         </div>
         <canvas id="chartCanvas" width="900" height="460"></canvas>
@@ -269,10 +315,11 @@
 
     <section class="panel notes">
       <h2>この解析の位置づけ</h2>
-      <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状と地盤特性の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
-      <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた<strong>可視化用の簡易モデル</strong>です。再踏破では、踏破ごとの締固めで地盤剛性が上がる一方、高スリップやラグによる撹乱で締固め効果が弱まる履歴モデルを追加しています。</p>
+      <p>主モデルはBekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状と地盤特性の傾向比較や、どの条件を本格DEM/MPMで掘るべきかを決める用途を想定しています。</p>
+      <p>RFT比較は、物体表面を小要素へ分けて局所抵抗を重ね合わせるRFTの構造を使います。ただし本来実測する αx/αz の角度マップは未同定のため、現在は選択地盤のpressure–sinkage特性から応力勾配を生成した<strong>未校正RFT proxy</strong>です。</p>
+      <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた可視化用の簡易モデルです。再踏破では、踏破ごとの締固めで地盤剛性が上がる一方、高スリップやラグによる撹乱で締固め効果が弱まる履歴モデルを追加しています。</p>
       <p>カスタムタイヤのラグ本数・角度は有効せん断係数と転がり抵抗係数へ写像する簡易モデルです。カスタム地盤のパラメータはBekker–Wong / Janosi–Hanamoto計算へ直接入り、保存プロファイルはこのブラウザ内に保持されます。</p>
-      <p class="warning">絶対値を実機設計に使うには地盤パラメータ、ラグ形状係数、再踏破時の締固め係数の実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
+      <p class="warning">絶対値を実機設計に使うには地盤パラメータ、RFTのαマップ、ラグ形状係数、再踏破時の締固め係数の実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
     </section>
   </main>
 
@@ -288,5 +335,7 @@
   <script src="soil-model.js"></script>
   <script src="soil-editor.js"></script>
   <script src="editor-sync.js"></script>
+  <script src="rft-model.js"></script>
+  <script src="rft-compare.js"></script>
 </body>
 </html>
