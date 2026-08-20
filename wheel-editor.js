@@ -108,7 +108,6 @@
     ctx.fillText('側面形状', 38, 34);
     ctx.fillText('接地面パターン（上面）', W * 0.54, 34);
 
-    // Side view.
     const sideCx = W * 0.25;
     const sideCy = H * 0.53;
     const maxOuterM = wheel.radius + wheel.lugHeight;
@@ -153,9 +152,8 @@
     ctx.fill();
 
     drawDimension(sideCx - R, sideCy + R + lugPx + 35, sideCx + R, sideCy + R + lugPx + 35, `直径 ${(wheel.radius * 2000).toFixed(0)} mm`);
-    if (lugPx > .5) drawDimension(sideCx + R + 24, sideCy, sideCx + R + lugPx + 24, sideCy, `ラグ ${wheel.lugHeight * 1000 | 0} mm`);
+    if (lugPx > .5) drawDimension(sideCx + R + 24, sideCy, sideCx + R + lugPx + 24, sideCy, `ラグ ${Math.round(wheel.lugHeight * 1000)} mm`);
 
-    // Top/footprint view. x = travel direction, y = tire width.
     const left = W * 0.55;
     const top = 95;
     const fw = W * 0.37;
@@ -203,8 +201,10 @@
     ctx.fillText(`ラグ ${wheel.lugCount} 本 / ${wheel.lugAngleDeg.toFixed(0)}°`, left, H - 34);
   }
 
-  function notifyRepass() {
-    if (typeof renderRepass === 'function') renderRepass();
+  function notifyViews() {
+    // Programmatic select changes do not emit DOM events. Dispatching this event
+    // lets both app.js and repass.js refresh their own derived tables/plots.
+    els.wheel.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   function applyCustom({ select = true, resetTerrain = true } = {}) {
@@ -215,7 +215,7 @@
     updateOutputs(wheel);
     drawPreview(wheel);
     recalc(resetTerrain);
-    notifyRepass();
+    notifyViews();
     return wheel;
   }
 
@@ -237,8 +237,6 @@
     applyCustom({ select: true, resetTerrain: true });
   });
 
-  // Add the custom wheel to every existing comparison without stealing the user's
-  // initial selection until they touch the editor.
   writeForm(DEFAULTS);
   const initial = model.deriveWheelGeometry({ ...DEFAULTS, name: 'カスタムタイヤ' });
   WHEELS.custom = initial;
@@ -246,5 +244,5 @@
   updateOutputs(initial);
   drawPreview(initial);
   recalc(false);
-  notifyRepass();
+  notifyViews();
 })();
