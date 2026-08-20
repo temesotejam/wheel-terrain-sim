@@ -1,0 +1,15 @@
+{
+  "name": "wheel-terrain-sim",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive browser-based wheel-terrain terramechanics sandbox",
+  "scripts": {
+    "check": "node --check app.js && node --check repass.js && node --check wheel-geometry.js && node --check wheel-editor.js && node --check soil-model.js && node --check soil-editor.js && node --check editor-sync.js && node --check rft-alpha-map.js && node --check rft-alpha-editor.js && node --check rft-model.js && node --check rft-compare.js",
+    "test:model": "node tests/repass-model.test.js && node tests/wheel-geometry.test.js && node tests/soil-model.test.js && node tests/rft-model.test.js && node tests/rft-alpha-map.test.js && node tests/rft-alpha-integration.test.js",
+    "test:ui": "node tests/wheel-editor-ui.test.js && node tests/soil-editor-ui.test.js && node tests/rft-ui.test.js && node tests/rft-alpha-ui.test.js && node tests/site-integrity.test.js",
+    "test": "npm run check && npm run test:model && npm run test:ui"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
