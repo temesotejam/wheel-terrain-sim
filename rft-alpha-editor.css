@@ -1,0 +1,22 @@
+.alpha-map-panel { display: grid; gap: 16px; }
+.alpha-heat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.alpha-heat-card { display: grid; gap: 7px; }
+.alpha-heat-card h3 { margin: 0; font-size: .92rem; color: var(--text); }
+.alpha-heat-card canvas { min-height: 300px; }
+.alpha-map-controls { display: grid; grid-template-columns: minmax(240px,.8fr) minmax(340px,1.2fr); gap: 16px; }
+.alpha-cell-editor, .alpha-profile-box { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: rgba(9,16,31,.42); }
+.alpha-cell-editor h3, .alpha-profile-box h3 { margin: 0 0 10px; font-size: .92rem; }
+.alpha-cell-angle { display: flex; gap: 18px; color: var(--muted); margin-bottom: 10px; font-size: .85rem; }
+.alpha-cell-angle strong { color: var(--text); }
+.alpha-value-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.alpha-value-row label { display: grid; gap: 6px; color: var(--muted); font-size: .82rem; }
+.alpha-value-row input, .alpha-profile-row input, .alpha-profile-row select { width: 100%; background: #0e1628; border: 1px solid var(--line); color: var(--text); border-radius: 9px; padding: 9px 10px; }
+.alpha-map-actions, .alpha-profile-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 10px; }
+.alpha-map-actions label { border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; background: var(--panel-2); color: var(--text); }
+.alpha-map-actions input[type="file"] { display: none; }
+.alpha-profile-row > input, .alpha-profile-row > select { flex: 1 1 220px; }
+.alpha-map-summary { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; margin-top: 12px; font-size: .82rem; color: var(--muted); }
+.alpha-map-summary strong { color: var(--text); text-align: right; }
+.alpha-map-summary p { grid-column: 1 / -1; margin: 6px 0 0; line-height: 1.55; color: var(--muted); }
+.alpha-map-note { margin: 0; color: var(--muted); line-height: 1.6; font-size: .84rem; }
+@media (max-width: 980px) { .alpha-heat-grid, .alpha-map-controls { grid-template-columns: 1fr; } }
