@@ -7,13 +7,14 @@
   <title>Wheel–Terrain Sim</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="repass.css" />
+  <link rel="stylesheet" href="wheel-editor.css" />
 </head>
 <body>
   <header class="hero">
     <div>
       <p class="eyebrow">WHEEL–TERRAIN SIM</p>
       <h1>タイヤと地面の力を、動きで見る。</h1>
-      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップ・轍に加え、同じ轍を繰り返し走る再踏破までタイヤ形状ごとに比較します。</p>
+      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップ・轍・再踏破に加え、カスタムタイヤ形状をその場で作って比較できます。</p>
     </div>
     <div class="hero-actions">
       <button id="playBtn" class="primary">▶ 再生</button>
@@ -78,6 +79,52 @@
     </section>
 
     <section class="metric-grid" id="metricGrid"></section>
+
+    <section class="grid two wheel-editor-grid">
+      <article class="panel wheel-preview-panel">
+        <div class="panel-head">
+          <div>
+            <h2>カスタムタイヤ形状</h2>
+            <p>側面形状と接地面パターンを見ながら、その場でタイヤを作成</p>
+          </div>
+          <span class="badge">Geometry editor</span>
+        </div>
+        <canvas id="wheelPreviewCanvas" width="960" height="460"></canvas>
+        <p class="editor-tip">編集すると自動的に「カスタムタイヤ」が選択され、上の走行解析・タイヤ比較・下の再踏破解析へ同じ形状が反映されます。</p>
+      </article>
+
+      <aside class="panel wheel-editor-controls">
+        <div class="panel-head">
+          <div>
+            <h2>形状パラメータ</h2>
+            <p>ラグ形状は軽量な有効係数へ変換</p>
+          </div>
+        </div>
+
+        <label>半径 <output id="customRadiusOut">150 mm</output>
+          <input id="customRadiusInput" type="range" min="60" max="320" step="5" value="150" />
+        </label>
+        <label>タイヤ幅 <output id="customWidthOut">80 mm</output>
+          <input id="customWidthInput" type="range" min="25" max="220" step="5" value="80" />
+        </label>
+        <label>ラグ高さ <output id="customLugHeightOut">12 mm</output>
+          <input id="customLugHeightInput" type="range" min="0" max="35" step="1" value="12" />
+        </label>
+        <label>ラグ本数 <output id="customLugCountOut">16 本</output>
+          <input id="customLugCountInput" type="range" min="0" max="36" step="1" value="16" />
+        </label>
+        <label>ラグ角度（進行方向に対して） <output id="customLugAngleOut">90°</output>
+          <input id="customLugAngleInput" type="range" min="0" max="90" step="5" value="90" />
+        </label>
+
+        <div class="wheel-editor-actions">
+          <button id="resetCustomWheelBtn" class="primary">標準カスタムへ戻す</button>
+          <button id="loadSelectedWheelBtn">選択タイヤを元にする</button>
+        </div>
+
+        <div id="customWheelSummary" class="custom-wheel-summary"></div>
+      </aside>
+    </section>
 
     <section class="grid two">
       <article class="panel">
@@ -144,7 +191,8 @@
       <h2>この解析の位置づけ</h2>
       <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
       <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた<strong>可視化用の簡易モデル</strong>です。再踏破では、踏破ごとの締固めで地盤剛性が上がる一方、高スリップやラグによる撹乱で締固め効果が弱まる履歴モデルを追加しています。</p>
-      <p class="warning">絶対値を実機設計に使うには地盤パラメータと再踏破時の締固め係数の実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
+      <p>カスタムタイヤのラグ本数・角度は、現時点では粒子接触を直接解かず、有効せん断係数と転がり抵抗係数へ写像する簡易モデルです。形状そのものはプレビューで正確に描きますが、力の絶対値には実測同定が必要です。</p>
+      <p class="warning">絶対値を実機設計に使うには地盤パラメータ、ラグ形状係数、再踏破時の締固め係数の実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
     </section>
   </main>
 
@@ -155,5 +203,7 @@
 
   <script src="app.js"></script>
   <script src="repass.js"></script>
+  <script src="wheel-geometry.js"></script>
+  <script src="wheel-editor.js"></script>
 </body>
 </html>
