@@ -12,10 +12,11 @@
     <div>
       <p class="eyebrow">WHEEL–TERRAIN SIM</p>
       <h1>タイヤと地面の力を、動きで見る。</h1>
-      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップをタイヤ形状ごとに比較します。</p>
+      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップに加え、走行後の轍と排土の傾向までタイヤ形状ごとに比較します。</p>
     </div>
     <div class="hero-actions">
       <button id="playBtn" class="primary">▶ 再生</button>
+      <button id="resetTerrainBtn">↺ 轍をリセット</button>
       <button id="recordBtn">● 8秒動画を保存</button>
     </div>
   </header>
@@ -25,8 +26,8 @@
       <article class="panel sim-panel">
         <div class="panel-head">
           <div>
-            <h2>走行アニメーション</h2>
-            <p>接触域の反力とタイヤの沈み込みを可視化</p>
+            <h2>走行・地盤変形アニメーション</h2>
+            <p>接触域の反力、沈下、後方への排土、走行後に残る轍を可視化</p>
           </div>
           <span id="modelBadge" class="badge">Bekker–Wong + Janosi–Hanamoto</span>
         </div>
@@ -35,6 +36,7 @@
           <span><i class="dot normal"></i>法線反力</span>
           <span><i class="dot shear"></i>せん断力</span>
           <span><i class="dot resultant"></i>合力</span>
+          <span><i class="dot rut"></i>残留轍プロファイル</span>
         </div>
       </article>
 
@@ -101,6 +103,7 @@
     <section class="panel notes">
       <h2>この解析の位置づけ</h2>
       <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
+      <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた<strong>可視化用の簡易モデル</strong>です。地面がどう変形しやすいかを直感的に比較するためのもので、DEMの粒子運動を代替するものではありません。</p>
       <p class="warning">絶対値を実機設計に使うには地盤パラメータの実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
     </section>
   </main>
