@@ -6,13 +6,14 @@
   <meta name="description" content="Interactive wheel-terrain terramechanics simulator" />
   <title>Wheel–Terrain Sim</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="repass.css" />
 </head>
 <body>
   <header class="hero">
     <div>
       <p class="eyebrow">WHEEL–TERRAIN SIM</p>
       <h1>タイヤと地面の力を、動きで見る。</h1>
-      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップに加え、走行後の轍と排土の傾向までタイヤ形状ごとに比較します。</p>
+      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップ・轍に加え、同じ轍を繰り返し走る再踏破までタイヤ形状ごとに比較します。</p>
     </div>
     <div class="hero-actions">
       <button id="playBtn" class="primary">▶ 再生</button>
@@ -100,11 +101,50 @@
       </article>
     </section>
 
+    <section class="grid two repass-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>再踏破解析</h2>
+            <p>同じ轍を繰り返し走ったときの締固め・追加沈下・推進力変化</p>
+          </div>
+          <span class="badge">履歴 + 締固め簡易モデル</span>
+        </div>
+        <canvas id="repassCanvas" width="960" height="520"></canvas>
+        <p class="repass-note">上段は轍の横断面履歴、下段は踏破回数に対する瞬間沈下（黄）と推進力（緑）の推移です。</p>
+      </article>
+
+      <aside class="panel repass-controls">
+        <div class="panel-head">
+          <div>
+            <h2>再踏破条件</h2>
+            <p>1〜8回まで同一条件で繰り返し計算</p>
+          </div>
+        </div>
+
+        <label>踏破回数 <output id="passCountOut">5 回</output>
+          <input id="passCountInput" type="range" min="1" max="8" step="1" value="5" />
+        </label>
+        <div class="repass-actions">
+          <button id="advancePassBtn" class="primary">次の踏破 ▶</button>
+          <button id="resetPassBtn">1回目に戻す</button>
+        </div>
+
+        <div id="repassSummary" class="repass-summary"></div>
+
+        <h3 class="repass-subhead">選択タイヤの踏破履歴</h3>
+        <div id="repassTable" class="table-wrap"></div>
+
+        <h3 class="repass-subhead">最終踏破時のタイヤ比較</h3>
+        <div id="allWheelRepassTable" class="table-wrap"></div>
+      </aside>
+    </section>
+
     <section class="panel notes">
       <h2>この解析の位置づけ</h2>
       <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
-      <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた<strong>可視化用の簡易モデル</strong>です。地面がどう変形しやすいかを直感的に比較するためのもので、DEMの粒子運動を代替するものではありません。</p>
-      <p class="warning">絶対値を実機設計に使うには地盤パラメータの実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
+      <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた<strong>可視化用の簡易モデル</strong>です。再踏破では、踏破ごとの締固めで地盤剛性が上がる一方、高スリップやラグによる撹乱で締固め効果が弱まる履歴モデルを追加しています。</p>
+      <p class="warning">絶対値を実機設計に使うには地盤パラメータと再踏破時の締固め係数の実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
     </section>
   </main>
 
@@ -114,5 +154,6 @@
   </footer>
 
   <script src="app.js"></script>
+  <script src="repass.js"></script>
 </body>
 </html>
