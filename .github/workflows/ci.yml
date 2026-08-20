@@ -20,6 +20,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - name: Run v1 test suite
         run: npm test
