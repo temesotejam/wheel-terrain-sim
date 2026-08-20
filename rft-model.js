@@ -4,6 +4,9 @@
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
   function referenceStressGradient(soil, width = 0.08, depth = 0.025) {
+    if (root.RFTAlphaMapModel?.referenceStressGradient) {
+      return root.RFTAlphaMapModel.referenceStressGradient(soil, width, depth);
+    }
     const b = clamp(Number(width) || 0.08, 0.02, 0.30);
     const z = clamp(Number(depth) || 0.025, 0.005, 0.08);
     const kc = Math.max(0, Number(soil.kc) || 0);
@@ -25,12 +28,13 @@
     const calibrationGain = clamp(Number(options.calibrationGain) || 1, 0.25, 4.0);
     const withdrawalFactor = clamp(Number(options.withdrawalFactor) || 0.35, 0.05, 0.90);
     const segments = clamp(Math.round(Number(options.segments) || 240), 60, 720);
+    const alphaMapModel = root.RFTAlphaMapModel;
+    const alphaMap = alphaMapModel?.validateMap?.(options.alphaMap) ? options.alphaMap : null;
+    const leadingEdgeOnly = options.leadingEdgeOnly !== false;
 
-    // Classical granular RFT uses an experimentally measured stress-per-depth
-    // alpha(beta,gamma) map. Here we preserve that structure but synthesize the
-    // magnitude from the selected soil's pressure-sinkage curve so the browser
-    // tool remains usable before plate-test calibration.
-    const alphaRef = referenceStressGradient(soil, 0.08, 0.025) * calibrationGain;
+    const alphaRef = alphaMap
+      ? Math.max(1, alphaMapModel.stats(alphaMap).rms)
+      : referenceStressGradient(soil, 0.08, 0.025) * calibrationGain;
     const horizontalRatio = 0.38 + 0.28 * Math.sin(phi);
     const lugRatio = clamp(lugHeight / Math.max(r, 1e-9), 0, 0.20);
     const lugTractionGain = 1 + 0.35 * (lugRatio / 0.08);
@@ -59,33 +63,50 @@
         const evx = vx / vm;
         const evz = vz / vm;
 
-        // Outward surface normal of the lower wheel arc.
+        // For the lower wheel arc, beta is the tangent/plate angle and the
+        // outward normal is n=(sin(beta),-cos(beta)). This matches the editor's
+        // documented 2D convention. gamma is the velocity-vector angle.
         const nx = Math.sin(a);
         const nz = -Math.cos(a);
         const normalVelocity = (vx * nx + vz * nz) / vm;
         const intrusion = clamp(normalVelocity, 0, 1);
-        const alignment = Math.abs(evx * nx + evz * nz);
+        const betaDeg = a * 180 / Math.PI;
+        const gammaDeg = Math.atan2(vz, vx) * 180 / Math.PI;
+        if (alphaMap && leadingEdgeOnly && normalVelocity <= 0) continue;
 
-        // Synthetic alpha(beta,gamma) angular map. It is deliberately simple:
-        // measured alpha_x/alpha_z tables can later replace this function without
-        // changing the integration and visualization layers.
-        const angularGain = 0.72 + 0.50 * alignment + 0.12 * Math.sin(phi);
-        const engagement = withdrawalFactor + (1 - withdrawalFactor) * intrusion;
-        const sigma = (alphaRef * depth + cohesion * 0.25) * angularGain * engagement;
+        let localFx;
+        let localFz;
+        let sigma;
+
+        if (alphaMap) {
+          // Classical granular RFT form: traction/depth alpha(beta,gamma)
+          // multiplied by local depth. The editable map directly supplies the
+          // signed x/z components, so no synthetic reaction direction is needed.
+          const alpha = alphaMapModel.sample(alphaMap, betaDeg, gammaDeg);
+          localFx = alpha.alphaX * depth * calibrationGain;
+          localFz = alpha.alphaZ * depth * calibrationGain;
+          if (vx < 0) localFx *= lugTractionGain;
+          sigma = Math.hypot(localFx, localFz);
+        } else {
+          // Fallback uncalibrated proxy retained for compatibility when no map
+          // is supplied. It synthesizes an angular alpha-like response from the
+          // selected soil's pressure-sinkage scale.
+          const alignment = Math.abs(evx * nx + evz * nz);
+          const angularGain = 0.72 + 0.50 * alignment + 0.12 * Math.sin(phi);
+          const engagement = withdrawalFactor + (1 - withdrawalFactor) * intrusion;
+          sigma = (alphaRef * depth + cohesion * 0.25) * angularGain * engagement;
+          const normalMix = 0.20 + 0.12 * intrusion;
+          let dx = -(1 - normalMix) * evx - normalMix * nx;
+          let dz = -(1 - normalMix) * evz - normalMix * nz;
+          const dm = Math.hypot(dx, dz) || 1;
+          dx /= dm;
+          dz /= dm;
+          const tractionShapeGain = vx < 0 ? lugTractionGain : 1;
+          localFx = sigma * dx * horizontalRatio * tractionShapeGain;
+          localFz = sigma * dz;
+        }
+
         maxStress = Math.max(maxStress, sigma);
-
-        // Reaction direction: mostly opposite local motion, with a smaller
-        // component opposite the outward normal during intrusion.
-        const normalMix = 0.20 + 0.12 * intrusion;
-        let dx = -(1 - normalMix) * evx - normalMix * nx;
-        let dz = -(1 - normalMix) * evz - normalMix * nz;
-        const dm = Math.hypot(dx, dz) || 1;
-        dx /= dm;
-        dz /= dm;
-
-        const tractionShapeGain = vx < 0 ? lugTractionGain : 1;
-        const localFx = sigma * dx * horizontalRatio * tractionShapeGain;
-        const localFz = sigma * dz;
         const dA = b * r * dtheta;
         fx += localFx * dA;
         fz += localFz * dA;
@@ -95,7 +116,7 @@
         moment += (x * localFz - z * localFx) * dA;
 
         if (idx % Math.max(1, Math.round(segments / 18)) === 0) {
-          samples.push({ theta: a, depth, sigma, fx: localFx, fz: localFz, vx, vz });
+          samples.push({ theta: a, betaDeg, gammaDeg, depth, sigma, fx: localFx, fz: localFz, vx, vz, leading: normalVelocity > 0 });
         }
       }
 
@@ -133,7 +154,10 @@
       tractionRatio: result.fx / load,
       loadError: result.fz - load,
       saturated,
-      modelLabel: 'RFT proxy (uncalibrated alpha map)',
+      alphaMapActive: Boolean(alphaMap),
+      alphaMapName: alphaMap?.name || null,
+      leadingEdgeOnly,
+      modelLabel: alphaMap ? 'RFT alpha map' : 'RFT proxy (uncalibrated alpha map)',
     };
   }
 
