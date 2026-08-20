@@ -8,13 +8,14 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="repass.css" />
   <link rel="stylesheet" href="wheel-editor.css" />
+  <link rel="stylesheet" href="soil-editor.css" />
 </head>
 <body>
   <header class="hero">
     <div>
       <p class="eyebrow">WHEEL–TERRAIN SIM</p>
       <h1>タイヤと地面の力を、動きで見る。</h1>
-      <p class="lead">簡易テラメカニクスモデルで、沈下・推進力・必要トルク・スリップ・轍・再踏破に加え、カスタムタイヤ形状をその場で作って比較できます。</p>
+      <p class="lead">簡易テラメカニクスモデルで、タイヤ形状と地盤特性を自由に変えながら、沈下・推進力・必要トルク・スリップ・轍・再踏破を比較できます。</p>
     </div>
     <div class="hero-actions">
       <button id="playBtn" class="primary">▶ 再生</button>
@@ -90,7 +91,7 @@
           <span class="badge">Geometry editor</span>
         </div>
         <canvas id="wheelPreviewCanvas" width="960" height="460"></canvas>
-        <p class="editor-tip">編集すると自動的に「カスタムタイヤ」が選択され、上の走行解析・タイヤ比較・下の再踏破解析へ同じ形状が反映されます。</p>
+        <p class="editor-tip">編集すると自動的に「カスタムタイヤ」が選択され、走行解析・タイヤ比較・再踏破解析へ同じ形状が反映されます。</p>
       </article>
 
       <aside class="panel wheel-editor-controls">
@@ -123,6 +124,85 @@
         </div>
 
         <div id="customWheelSummary" class="custom-wheel-summary"></div>
+      </aside>
+    </section>
+
+    <section class="grid two soil-editor-grid">
+      <article class="panel soil-preview-panel">
+        <div class="panel-head">
+          <div>
+            <h2>カスタム地盤</h2>
+            <p>支持圧–沈下特性とせん断強度を見ながら地盤を作成</p>
+          </div>
+          <span class="badge">Soil editor</span>
+        </div>
+        <canvas id="soilPreviewCanvas" width="960" height="460"></canvas>
+        <p class="editor-tip soil-tip">左はBekker式の pressure–sinkage、右は Mohr–Coulomb + Janosi–Hanamoto で使う最大せん断強度の目安です。編集値は通常解析・比較・再踏破へ共通で反映されます。</p>
+      </article>
+
+      <aside class="panel soil-editor-controls">
+        <div class="panel-head">
+          <div>
+            <h2>地盤パラメータ</h2>
+            <p>大きな係数は数値入力、傾向値はスライダー</p>
+          </div>
+        </div>
+
+        <label>kc（モデル係数）
+          <div class="soil-number-row">
+            <input id="customSoilKcInput" type="number" min="0" max="300000" step="1000" value="14000" />
+            <span>0–300,000</span>
+          </div>
+        </label>
+        <label>kφ（モデル係数）
+          <div class="soil-number-row">
+            <input id="customSoilKphiInput" type="number" min="100000" max="8000000" step="10000" value="820000" />
+            <span>0.1–8.0 M</span>
+          </div>
+        </label>
+        <label>沈下指数 n <output id="customSoilNOut">1.10</output>
+          <input id="customSoilNInput" type="range" min="0.50" max="1.60" step="0.01" value="1.10" />
+        </label>
+        <label>粘着力 c <output id="customSoilCohesionOut">400 Pa</output>
+          <input id="customSoilCohesionInput" type="range" min="0" max="30000" step="100" value="400" />
+        </label>
+        <label>内部摩擦角 φ <output id="customSoilPhiOut">28°</output>
+          <input id="customSoilPhiInput" type="range" min="5" max="45" step="1" value="28" />
+        </label>
+        <label>せん断変位 K <output id="customSoilKOut">25 mm</output>
+          <input id="customSoilKInput" type="range" min="5" max="80" step="1" value="25" />
+        </label>
+        <label>密度 <output id="customSoilDensityOut">1500 kg/m³</output>
+          <input id="customSoilDensityInput" type="range" min="800" max="2500" step="10" value="1500" />
+        </label>
+        <label>残留轍係数 <output id="customSoilRutOut">0.72</output>
+          <input id="customSoilRutInput" type="range" min="0.05" max="1.10" step="0.01" value="0.72" />
+        </label>
+        <label>土流動係数 <output id="customSoilFlowOut">1.00</output>
+          <input id="customSoilFlowInput" type="range" min="0" max="1.50" step="0.01" value="1.00" />
+        </label>
+
+        <div class="soil-editor-actions">
+          <button id="resetCustomSoilBtn" class="primary">柔らかい砂相当へ戻す</button>
+          <button id="loadSelectedSoilBtn">選択地盤を元にする</button>
+        </div>
+
+        <div id="customSoilSummary" class="soil-summary"></div>
+
+        <div class="soil-profile-box">
+          <h3>地盤プロファイルを保存</h3>
+          <div class="soil-profile-row">
+            <input id="soilProfileName" type="text" maxlength="80" placeholder="例: 乾燥砂 実験A" />
+            <button id="saveSoilProfileBtn">保存</button>
+          </div>
+          <div class="soil-profile-row">
+            <select id="savedSoilProfileSelect"></select>
+            <div class="soil-profile-actions">
+              <button id="loadSoilProfileBtn">読込</button>
+              <button id="deleteSoilProfileBtn">削除</button>
+            </div>
+          </div>
+        </div>
       </aside>
     </section>
 
@@ -189,9 +269,9 @@
 
     <section class="panel notes">
       <h2>この解析の位置づけ</h2>
-      <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
+      <p>これはDEMのように土粒子一つ一つを解く解析ではなく、Bekker系の圧力–沈下式とJanosi–Hanamoto型のせん断式を使った<strong>軽量な準物理モデル</strong>です。タイヤ形状と地盤特性の傾向比較や、どの条件を本格DEM/FEMで掘るべきかを決める用途を想定しています。</p>
       <p>轍・排土アニメーションは、計算した沈下量とスリップ率に地盤別の残留係数を掛けた<strong>可視化用の簡易モデル</strong>です。再踏破では、踏破ごとの締固めで地盤剛性が上がる一方、高スリップやラグによる撹乱で締固め効果が弱まる履歴モデルを追加しています。</p>
-      <p>カスタムタイヤのラグ本数・角度は、現時点では粒子接触を直接解かず、有効せん断係数と転がり抵抗係数へ写像する簡易モデルです。形状そのものはプレビューで正確に描きますが、力の絶対値には実測同定が必要です。</p>
+      <p>カスタムタイヤのラグ本数・角度は有効せん断係数と転がり抵抗係数へ写像する簡易モデルです。カスタム地盤のパラメータはBekker–Wong / Janosi–Hanamoto計算へ直接入り、保存プロファイルはこのブラウザ内に保持されます。</p>
       <p class="warning">絶対値を実機設計に使うには地盤パラメータ、ラグ形状係数、再踏破時の締固め係数の実測同定が必要です。現段階では「比較・可視化」が主目的です。</p>
     </section>
   </main>
@@ -205,5 +285,8 @@
   <script src="repass.js"></script>
   <script src="wheel-geometry.js"></script>
   <script src="wheel-editor.js"></script>
+  <script src="soil-model.js"></script>
+  <script src="soil-editor.js"></script>
+  <script src="editor-sync.js"></script>
 </body>
 </html>
