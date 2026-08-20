@@ -34,12 +34,17 @@
       slip: Number(document.querySelector('#slipInput')?.value || 0.2),
       speed: Number(document.querySelector('#speedInput')?.value || 0.6),
       gain: Number(ui.gain.value || 1),
+      alphaMap: globalThis.getActiveRFTAlphaMap?.() || null,
     };
   }
 
   function results(input, slip = input.slip, gain = input.gain) {
     const bw = integrateWheel(input.wheel, input.soil, input.load, slip);
-    const rft = model.simulateWheel(input.wheel, input.soil, input.load, slip, input.speed, { calibrationGain: gain });
+    const rft = model.simulateWheel(input.wheel, input.soil, input.load, slip, input.speed, {
+      calibrationGain: gain,
+      alphaMap: input.alphaMap,
+      leadingEdgeOnly: true,
+    });
     return { bw, rft };
   }
 
@@ -96,7 +101,6 @@
       const fm = Math.hypot(q.fx, q.fz) || 1;
       const stressScale = 18 + 46 * clamp(q.sigma / maxStress, 0, 1);
       drawArrow(ctx, x, y, x + q.fx / fm * stressScale, y - q.fz / fm * stressScale, '#6ee7ff', 2.2);
-
       const vm = Math.hypot(q.vx, q.vz) || 1;
       drawArrow(ctx, x, y, x + q.vx / vm * 20, y - q.vz / vm * 20, 'rgba(248,193,92,.72)', 1.2);
     }
@@ -108,21 +112,20 @@
     ctx.fillStyle = '#eef3ff'; ctx.font = '700 16px system-ui';
     ctx.fillText('RFT局所要素', 28, 32);
     ctx.font = '13px system-ui'; ctx.fillStyle = '#94a3bd';
-    ctx.fillText('水色: 局所抵抗力 / 黄: 表面の地盤に対する運動', 28, 55);
+    ctx.fillText('水色: α(β,γ)|z| の局所抵抗 / 黄: 地盤に対する局所速度', 28, 55);
     ctx.fillStyle = '#7ce6a2'; ctx.fillText(`Fx ${fmt(rft.fx, 1)} N`, originX, 290);
     ctx.fillStyle = '#a78bfa'; ctx.fillText(`Fz ${fmt(rft.fz, 1)} N`, originX, 312);
     ctx.fillStyle = '#eef3ff';
     ctx.fillText(`沈下 ${fmt(rft.z * 1000, 1)} mm`, originX, 334);
-    ctx.fillText(`α基準 ${fmt(rft.alphaRef / 1e6, 2)} MPa/m`, originX, 356);
+    ctx.fillText(`α RMS ${fmt(rft.alphaRef / 1000, 0)} kN/m³`, originX, 356);
     ctx.fillStyle = '#94a3bd';
-    ctx.fillText('各要素の深さ・向き・運動方向から局所応力を計算して積分', 28, H - 24);
+    ctx.fillText(`map: ${rft.alphaMapName || 'fallback proxy'} / leading edge only`, 28, H - 24);
   }
 
   function drawCompare(input) {
     const ctx = cctx, W = ui.chart.width, H = ui.chart.height;
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#09101f'; ctx.fillRect(0, 0, W, H);
-
     const slips = Array.from({ length: 17 }, (_, i) => i * 0.05);
     const rows = slips.map(s => ({ s, ...results(input, s) }));
     const padL = 62, padR = 24;
@@ -166,7 +169,7 @@
       ctx.textAlign = 'left'; ctx.fillStyle = '#eef3ff'; ctx.font = '700 14px system-ui';
       ctx.fillText(`${label} (${unit})`, padL, panelTop - 14);
       ctx.fillStyle = '#6ee7ff'; ctx.fillText('Bekker–Wong', padL + 130, panelTop - 14);
-      ctx.fillStyle = '#f8c15c'; ctx.fillText('RFT proxy', padL + 245, panelTop - 14);
+      ctx.fillStyle = '#f8c15c'; ctx.fillText('RFT α-map', padL + 245, panelTop - 14);
     }
 
     plot(topA, bottomA, row => row.bw.fx, row => row.rft.fx, '正味推進力', 'N', true);
@@ -188,18 +191,19 @@
       ['推進力差', `${tractionDelta >= 0 ? '+' : ''}${fmt(tractionDelta, 1)} N`, 'RFT − Bekker'],
       ['沈下差', `${sinkDelta >= 0 ? '+' : ''}${fmt(sinkDelta, 1)} mm`, 'RFT − Bekker'],
       ['トルク差', `${torqueDelta >= 0 ? '+' : ''}${fmt(torqueDelta, 1)} N·m`, 'RFT − Bekker'],
-      ['RFT α基準', `${fmt(rft.alphaRef / 1e6, 2)} MPa/m`, '25 mm深さから暫定換算'],
+      ['使用αマップ', input.alphaMap?.name || 'fallback proxy', rft.alphaMapActive ? '編集/CSVマップ' : '互換proxy'],
     ].map(([label, value, sub]) => `<div class="rft-card"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`).join('');
 
     ui.table.innerHTML = `<table><thead><tr><th>モデル</th><th>推進力</th><th>鉛直力</th><th>沈下</th><th>トルク</th></tr></thead><tbody>
       <tr><td>Bekker–Wong</td><td>${fmt(bw.fx, 1)} N</td><td>${fmt(bw.fz, 1)} N</td><td>${fmt(bw.z * 1000, 1)} mm</td><td>${fmt(bw.torque, 2)} N·m</td></tr>
-      <tr class="rft-row"><td>RFT proxy</td><td>${fmt(rft.fx, 1)} N</td><td>${fmt(rft.fz, 1)} N</td><td>${fmt(rft.z * 1000, 1)} mm</td><td>${fmt(rft.torque, 2)} N·m</td></tr>
+      <tr class="rft-row"><td>RFT α-map</td><td>${fmt(rft.fx, 1)} N</td><td>${fmt(rft.fz, 1)} N</td><td>${fmt(rft.z * 1000, 1)} mm</td><td>${fmt(rft.torque, 2)} N·m</td></tr>
     </tbody></table>`;
 
     const warnings = [];
     if ((input.soil.cohesion || 0) > 2500) warnings.push('粘着力が大きい地盤では、乾燥粒状体向けRFTから外れるため参考値です。');
-    if (rft.saturated) warnings.push('RFT側が最大沈下でも荷重を支え切れていません。α校正またはモデル範囲の見直しが必要です。');
-    warnings.push('RFTの角度依存 αx/αz マップは未実測です。現在は選択地盤のpressure–sinkage特性から応力勾配を作った比較用proxyです。');
+    if (rft.saturated) warnings.push('RFT側が最大沈下でも荷重を支え切れていません。αマップ/校正ゲインまたは適用範囲を見直してください。');
+    if (input.alphaMap?.source?.startsWith('proxy')) warnings.push('現在のαマップは選択地盤から生成したproxy seedです。実測CSVへ置き換えると校正RFTとして使えます。');
+    else warnings.push('αマップのβ/γ角度規約と実験側の定義を一致させてください。');
     ui.warning.textContent = warnings.join(' ');
     ui.gainOut.value = `${input.gain.toFixed(2)} ×`;
   }
@@ -219,7 +223,9 @@
     let best = 1, bestErr = Infinity;
     for (let k = 0; k < 30; k++) {
       const mid = (lo + hi) / 2;
-      const z = model.simulateWheel(input.wheel, input.soil, input.load, input.slip, input.speed, { calibrationGain: mid }).z;
+      const z = model.simulateWheel(input.wheel, input.soil, input.load, input.slip, input.speed, {
+        calibrationGain: mid, alphaMap: input.alphaMap, leadingEdgeOnly: true,
+      }).z;
       const err = Math.abs(z - target);
       if (err < bestErr) { bestErr = err; best = mid; }
       if (z > target) lo = mid; else hi = mid;
@@ -236,6 +242,7 @@
     document.querySelector(`#${id}`)?.addEventListener('change', refresh);
   });
   document.addEventListener('wheel-terrain-editor-sync', refresh);
+  window.addEventListener('rft-alpha-map-change', refresh);
 
   refresh();
 })();
