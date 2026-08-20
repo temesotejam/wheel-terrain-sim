@@ -1,0 +1,17 @@
+.repass-grid { align-items: start; }
+.repass-controls { display: grid; gap: 14px; align-content: start; }
+.repass-controls label { display: grid; gap: 7px; color: var(--muted); font-size: .88rem; }
+.repass-controls output { color: var(--text); font-weight: 800; }
+.repass-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.repass-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.repass-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: rgba(11,16,32,.35); display: grid; gap: 4px; }
+.repass-card span { color: var(--muted); font-size: .74rem; }
+.repass-card strong { font-size: 1.35rem; }
+.repass-card small { color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.repass-subhead { margin: 4px 0 0; font-size: .95rem; }
+.repass-note { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+#repassCanvas { min-height: 320px; }
+@media (max-width: 560px) {
+  .repass-summary { grid-template-columns: 1fr 1fr; }
+  .repass-actions button { flex: 1 1 140px; }
+}
