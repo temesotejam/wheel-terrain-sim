@@ -24,5 +24,13 @@ jobs:
         run: node --check app.js
       - name: Check repass module syntax
         run: node --check repass.js
+      - name: Check wheel geometry model syntax
+        run: node --check wheel-geometry.js
+      - name: Check wheel editor syntax
+        run: node --check wheel-editor.js
       - name: Run repass model tests
         run: node tests/repass-model.test.js
+      - name: Run wheel geometry model tests
+        run: node tests/wheel-geometry.test.js
+      - name: Run wheel editor UI wiring tests
+        run: node tests/wheel-editor-ui.test.js
