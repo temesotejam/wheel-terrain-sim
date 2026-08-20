@@ -34,6 +34,10 @@ jobs:
         run: node --check soil-editor.js
       - name: Check editor sync syntax
         run: node --check editor-sync.js
+      - name: Check RFT alpha map syntax
+        run: node --check rft-alpha-map.js
+      - name: Check RFT alpha editor syntax
+        run: node --check rft-alpha-editor.js
       - name: Check RFT model syntax
         run: node --check rft-model.js
       - name: Check RFT comparison syntax
@@ -52,3 +56,9 @@ jobs:
         run: node tests/rft-model.test.js
       - name: Run RFT UI wiring tests
         run: node tests/rft-ui.test.js
+      - name: Run RFT alpha map tests
+        run: node tests/rft-alpha-map.test.js
+      - name: Run RFT alpha integration tests
+        run: node tests/rft-alpha-integration.test.js
+      - name: Run RFT alpha editor UI tests
+        run: node tests/rft-alpha-ui.test.js
