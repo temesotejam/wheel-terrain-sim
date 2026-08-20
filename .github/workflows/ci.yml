@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/initial-terramechanics-sim
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check main simulator syntax
+        run: node --check app.js
+      - name: Check repass module syntax
+        run: node --check repass.js
+      - name: Run repass model tests
+        run: node tests/repass-model.test.js
